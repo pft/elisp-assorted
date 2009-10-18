@@ -11,7 +11,7 @@ Completion functions for editing CSS-files (to be used alongside another CSS-mod
 
 gothic.el
 ---------
-Write Gothic like Warsila (gothic input method)
+Write Gothic like Wulfila (gothic input method)
 
 lisp-magick-doc.el
 ------------------
