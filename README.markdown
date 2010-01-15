@@ -40,7 +40,7 @@ disk-usage.el
 -------------
 Disk-usage shows sorted disk usage in a directory in a dedicated
 buffer. This may help one to clean up ones disk. Small files can be
-ignored (see variable `du-ignored-size'). Options to "du" command
-line can be customized and/or edited in place when `du' is invoked
-with a prefix argument. Press 'd' in a *du* buffer to visit a line
+ignored (see variable du-ignored-size). Options to "du" command
+line can be customized and/or edited in place when du is invoked
+with a prefix argument. Press `d` in a \*du\* buffer to visit a line
 in Dired.

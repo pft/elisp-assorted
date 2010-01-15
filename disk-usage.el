@@ -22,6 +22,13 @@
 
 ;; Requires the UNIX "du" utility
 
+;; Disk-usage shows sorted disk usage in a directory in a dedicated
+;; buffer. This may help one to clean up ones disk. Small files can be
+;; ignored (see variable `du-ignored-size'). Options to "du" command
+;; line can be customized and/or edited in place when `du' is invoked
+;; with a prefix argument. Press 'd' in a *du* buffer to visit a line
+;; in Dired.
+
 ;; Put something like the following in your init file (~/.emacs,
 ;; ~/.emacs.d/init.el or something similar):
 
@@ -42,48 +49,80 @@
 With prefix arg EDIT-ARGS, let user to edit arguments given to du."
   (interactive 
    "DDirectory: \nP")
-  (switch-to-buffer "*du*")
-  (du-mode t)
-  (let (buffer-read-only)
-   (erase-buffer)
-   (mapc
-	#'du-insert
-	(nreverse
-	 (sort
-	  (remove-if #'du-to-be-ignored-p
-				 (split-string 
-				  (shell-command-to-string
-				   (format 
-					"du %s %s 2>%s"
-					(if edit-args 
-						(read-from-minibuffer "Arguments: du " du-args)
-					  du-args)
-					(shell-quote-argument
-					 (expand-file-name dir))
-					du-err-log))
-				  "\n" t))
-	  #'du-compare)))
-      (if (du-empty-buffer-p)
-		  (insert-file-contents du-err-log)
-		(delete-char -1)))
-  (goto-char (point-min)))
+  (save-window-excursion
+   (let* 
+	   ((cmd (format 
+			  "du %s %s 2>%s"
+			  (if edit-args 
+				  (read-from-minibuffer "Arguments: du " du-args)
+				du-args)
+			  (shell-quote-argument
+			   (expand-file-name dir))
+			  du-err-log))
+		(proc (progn
+				(switch-to-buffer cmd)
+				(erase-buffer)
+				(start-process-shell-command "du" cmd cmd))))
+	 (put 'du 'last-requested-at (current-time))
+	 (set-process-sentinel proc #'du-callback))))
+
+(defun du-callback (proc sentinel)
+  "Callback to run when \"du\" returns."
+  (save-window-excursion
+   (let ((result-string
+		  (with-current-buffer 
+			  (process-buffer proc)
+			(buffer-substring-no-properties
+			 (point-min)
+			 (point-max)))))
+	 (switch-to-buffer "*du*")
+	 (du-mode t)
+	 (let (buffer-read-only)
+	   (erase-buffer)
+	   (mapc
+		#'du-insert
+		(nreverse
+		 (sort
+		  (remove-if #'du-to-be-ignored-p
+					 (split-string 
+					  result-string
+					  "\n" t))
+		  #'du-compare)))
+	   (if (du-empty-buffer-p)
+		   (insert-file-contents du-err-log)
+		 (delete-char -1)))
+	 (goto-char (point-min))))
+  (if 
+	  (> (time-to-seconds
+		  (time-since (get 'du 'last-requested-at))) 3)
+	  (message "Output of %s retrieved in %S"	
+			   (buffer-name (process-buffer proc))
+			   (get-buffer "*du*"))
+	(switch-to-buffer "*du*"))
+  (unless du-debug
+   (kill-buffer (process-buffer proc))))
 
 (defun du-to-be-ignored-p (s)
-   (<= (du-dehumanize-string s)
+  (<= (du-dehumanize-string s)
 	  du-ignored-size))
 
-(defcustom du-err-log "/tmp/du-err.log"
-	"Error log file for du."
-	:type '(file)
-	:group 'du)
+(defgroup du nil
+  "Customization group for du (disk-usage)")
+
+(defcustom du-debug nil
+  "Debug switch for `du'"
+  :group 'du
+  :type 'bool)
 
 (defcustom du-ignored-size 1048576
   "Ignore files of or below this size."
   :group 'du
   :type '(number))
 
-(defgroup du nil
-  "Customization group for du (disk-usage)")
+(defcustom du-err-log "/tmp/du-err.log"
+	"Error log file for du."
+	:type '(file)
+	:group 'du)
 
 (defcustom du-args
   "--max-depth=1 -h -a"
@@ -113,7 +152,8 @@ Allowed are:
 	--max-depth=N
 
 See man(du) for explanation of those arguments"
-  :group 'du)
+  :group 'du
+  :type 'string)
 
 (defun du-size-part (s)
   (string-to-number s))
