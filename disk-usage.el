@@ -289,7 +289,11 @@ See man(du) for explanation of those arguments"
 	(dired
 	 (if (file-directory-p file-or-dir)
 		 file-or-dir
-	   (file-name-directory file-or-dir)))))
+	   (file-name-directory file-or-dir)))
+	 (when (not (file-directory-p file-or-dir))
+	   (goto-char (point-min))
+	   (search-forward (file-name-nondirectory file-or-dir))
+	   (goto-char (match-beginning 0)))))
 
 (defun du-empty-buffer-p ()
  (= (point-min)
