@@ -238,15 +238,17 @@ See man(du) for explanation of those arguments"
 	   result)))
   "Following kB 1000, K 1024, MB 1000*1000, M 1024*1024, and so on for G, T, P, E, Z, Y")
 
+
+(defun du-file-at-line ()
+  (let ((line (buffer-substring-no-properties
+				(point-at-bol)
+				(point-at-eol))))
+	(string-match du-inserted-string-regex line)
+	(substring line (match-end 3))))
+
 (defun du-down-dir ()
   (interactive)
-  (let* ((line (buffer-substring-no-properties
-				(point-at-bol)
-				(point-at-eol)))
-		 (file-or-dir 
-		  (progn
-			(string-match du-inserted-string-regex line)
-			(substring line (match-end 3)))))
+  (let ((file-or-dir (du-file-at-line)))
 	(if
 	 (file-directory-p file-or-dir)
 		(du file-or-dir)
@@ -256,13 +258,7 @@ See man(du) for explanation of those arguments"
 (defun du-up-dir ()
   "Go up a dir"
   (interactive)
-  (let* ((line (buffer-substring-no-properties
-				(point-at-bol)
-				(point-at-eol)))
-		 (file-or-dir 
-		  (progn
-			(string-match du-inserted-string-regex line)
-			(substring line (match-end 3)))))
+  (let ((file-or-dir (du-file-at-line)))
 	(du
 	 (file-name-directory 
 	  (substring file-or-dir
@@ -274,18 +270,14 @@ See man(du) for explanation of those arguments"
 	(define-key m [(:)] 'du-up-dir)
 	(define-key m [(d)] 'du-dired)
 	(define-key m [(q)] 'bury-buffer)
+	(define-key m [(u)] 'du)
+	(define-key m [(D)] 'du-delete)
 	m))
 
 (defun du-dired ()
   "View dir in dired"
   (interactive)
-  (let* ((line (buffer-substring-no-properties
-				(point-at-bol)
-				(point-at-eol)))
-		 (file-or-dir 
-		  (progn
-			(string-match du-inserted-string-regex line)
-			(substring line (match-end 3)))))
+  (let ((file-or-dir (du-file-at-line)))
 	(dired
 	 (if (file-directory-p file-or-dir)
 		 file-or-dir
