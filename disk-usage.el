@@ -291,6 +291,21 @@ See man(du) for explanation of those arguments"
  (= (point-min)
 	(point-max)))
 
+(defun du-delete ()
+  "Directly delete a file or directory in Disk Usage buffer.
+
+To keep it simple, this command does not delete the file or directory from the buffer."
+  (interactive)
+  (let* ((file-or-dir (du-file-at-line))
+		 (type (if (file-directory-p file-or-dir)
+				   'dir
+				 'file)))
+   (when (yes-or-no-p
+		  (format "Delete %S? " type))
+	 (case type
+	   (file (delete-file file-or-dir))
+	   (dir (delete-directory file-or-dir t))))))
+
 (define-minor-mode du-mode 
   "Minor mode for du.
 
