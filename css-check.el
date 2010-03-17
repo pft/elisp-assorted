@@ -33,13 +33,32 @@
 
 (defvar css-file nil)
 
+(defgroup css-check nil
+  "Customization group for CSS-check"
+  :group 'css)
+
+(defface css-check-unapplied-face
+  '((default)
+    (((background light)) (:foreground "#ab5736"))
+    (((background dark)) (:foreground "#ab5736")))
+  "Face for unapplied line."
+  :group 'css-check)
+
+(defface css-check-applied-face
+  '((default)
+    (((background light)) (:foreground "#aa9b37"))
+    (((background dark)) (:foreground "#aa9b37")))
+  "Face for applied line."
+  :group 'css-check)
+
 (defvar css-check-map
   (let ((map (make-sparse-keymap)))
     (define-key map "\C-m" 'css-check-goto-line-at-p)
     (define-key map "f" 'css-check-toggle-follow)
     (define-key map "j" 'css-check-next-line)
     (define-key map "k" 'css-check-prev-line)
-    (define-key map [(mouse-1)] 'css-check-goto-line-at-p)
+    (define-key map "a" 'css-check-apply-line-at-p)
+    (define-key map "u" 'css-check-undo-application-at-p)
     map))
 
 (defvar css-check-follow-mode nil)
@@ -79,8 +98,82 @@
          (and line
               (goto-line line)))))
 
+(defun css-check-apply-line-at-p ()
+  "Apply tidying at point."
+  (interactive)
+  (if (text-property-any (point-at-bol)
+						 (1+ (point-at-bol))
+						 'face
+						 'css-check-applied-face)
+	  (message "Line has already been applied")
+   (let ((buffer (current-buffer)))
+	 (multiple-value-bind (oldtext newtext)
+		 (save-excursion
+		   (end-of-line)
+		   (re-search-backward "Changed \"\\([^\"]+\\)\" to \"\\([^\"]+\\)\"$" 
+							   (point-at-bol) t)
+		   (values 
+			(match-string 1)
+			(match-string 2)))
+	   (when (and oldtext newtext)
+		 (css-check-goto-line-at-p)
+		 (save-excursion
+		   (replace-string oldtext newtext nil (point-at-bol) (point-at-eol)))
+		 (switch-to-buffer-other-window buffer)
+		 (save-excursion
+		   (let (buffer-read-only)
+			 (put-text-property 
+			  (point-at-bol)
+			  (progn
+				(beginning-of-line)
+				(re-search-forward "^[[:digit:]]+"
+								   (point-at-eol)
+								   t)
+				(point))
+			  'face 'css-check-applied-face))))))))
+
+(defun css-check-undo-application-at-p ()
+  "Undo application at point."
+  (interactive)
+  (if  (text-property-any (point-at-bol)
+						 (1+ (point-at-bol))
+						 'face
+						 'css-check-unapplied-face)
+	  (message "Line has not been applied")
+   (let ((buffer (current-buffer)))
+	 (multiple-value-bind (newtext oldtext)
+		 (save-excursion
+		   (end-of-line)
+		   (re-search-backward "Changed \"\\([^\"]+\\)\" to \"\\([^\"]+\\)\"$" 
+							   (point-at-bol) t)
+		   (values 
+			(match-string 1)
+			(match-string 2)))
+	   (when (and oldtext newtext)
+		 (css-check-goto-line-at-p)
+		 (save-excursion
+		   (replace-string oldtext newtext nil (point-at-bol) (point-at-eol)))
+		 (switch-to-buffer-other-window buffer)
+		 (save-excursion
+		   (let (buffer-read-only)
+			 (put-text-property 
+			  (point-at-bol)
+			  (progn
+				(beginning-of-line)
+				(re-search-forward "^[[:digit:]]+"
+								   (point-at-eol)
+								   t)
+				(point))
+			  'face 'css-check-unapplied-face))))))))
+
 (defun css-check ()
   (interactive)
+  (and
+   (buffer-modified-p)
+   (y-or-n-p
+    (format "Buffer %s has been modified since last save. Save buffer? "
+            (current-buffer)))
+   (save-buffer))
   (let* ((file (buffer-file-name))
          (cmd (format "csstidy %s /dev/null" file))
          (res (shell-command-to-string cmd)))
@@ -92,8 +185,7 @@
       (while (re-search-forward "^[[:digit:]]+" nil t)
         (put-text-property (match-beginning 0)
                            (match-end 0)
-                           'mouse-face 'highlight
-                           )
+                           'face 'css-check-unapplied-face)
         (put-text-property (match-beginning 0)
                            (match-end 0)
                            'keymap 'highlight
@@ -104,4 +196,5 @@
       (use-local-map css-check-map))
     (setq buffer-read-only t)))
 
+(provide 'css-check)
 ;; css-check.el ends here
