@@ -498,7 +498,7 @@
       (insert newval))))
 
 (defun css-at-string-p ()
-  (member 'font-lock-string-face (text-properties-at (point))))
+  (nth 3 (syntax-ppss)))
 
 (defun css-at-filename-p ()
   (css-at-string-p))
@@ -508,9 +508,6 @@
 
 (defun css-at-comment-p ()
   (nth 4 (syntax-ppss)))
-
-(defun css-at-string-p ()
-  (nth 3 (syntax-ppss)))
 
 (defun css-after-at-p ()
   (looking-back "@\\(?:charset\\|font-face\\|import\\|media\\|page\\)[[:space:]]+"))
