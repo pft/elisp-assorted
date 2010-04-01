@@ -1,6 +1,6 @@
 ;;; css-complete.el --- complete css attributes and properties
 
-;; Copyright (C) 2009  niels giesen
+;Copyright (C) 2010 by Niels Giesen
 
 ;; Author: Niels Giesen <com dot gmail at niels dot giesen, in reversed order>
 ;; Keywords: css, web, html
@@ -188,14 +188,14 @@
     ("background-attachment" "fixed" "scroll")
     ("azimuth" "rightwards" "leftwards" "behind" "right-side" "far-right" "right" "center-right" "center" "center-left" "left" "far-left" "left-side" angle)))
 
-(defmacro collect (test lst)
+(defmacro css-collect (test lst)
   "Return all items in LST for which TEST returns non-nil."
   `(loop for v in ,lst
 	 when (funcall ,test v)
 	 collect v))
 
 (defun css-vals-for-prop (prop)
-  (collect 'stringp 
+  (css-collect 'stringp 
 	   (cdr (assoc prop css-props-and-vals))))
 
 (defun css-prop-for-point ()
@@ -219,7 +219,7 @@
     (buffer-substring-no-properties beg end)))
 
 (defun css-possible-value-completions (str)
-  (collect (lambda (compared-string)
+  (css-collect (lambda (compared-string)
 	     (string-match 
 	      (concat "^" str)
 	      compared-string)) 
@@ -289,7 +289,7 @@
     (buffer-substring-no-properties beg end)))
 
 (defun css-possible-prop-completions (str)
-  (collect (lambda (compared-string)
+  (css-collect (lambda (compared-string)
 	     (string-match 
 	      (concat "^" str)
 	      compared-string)) 
@@ -344,7 +344,7 @@
     (buffer-substring-no-properties beg end)))
 
 (defun css-possible-pseudo-completions (str)
-  (collect (lambda (compared-string)
+  (css-collect (lambda (compared-string)
 	     (string-match 
 	      (concat "^" str)
 	      compared-string)) 
@@ -403,7 +403,7 @@
   css-tag-ids)
 
 (defun css-possible-tag-completions (str)
-  (collect (lambda (compared-string)
+  (css-collect (lambda (compared-string)
 	     (string-match 
 	      (concat "^" str)
 	      compared-string)) 
@@ -460,7 +460,7 @@
   css-at-ids)
 
 (defun css-possible-at-completions (str)
-  (collect (lambda (compared-string)
+  (css-collect (lambda (compared-string)
 	     (string-match 
 	      (concat "^" str)
 	      compared-string)) 
