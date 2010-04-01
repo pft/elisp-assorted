@@ -598,18 +598,11 @@
 	    char))
   (forward-char -1))
 
-(defun css-electric-semicolon ()
-  (interactive)
-  (let ((char ?\;))
-    (insert char))
-  (fill-paragraph t))
-
 (define-key css-mode-map [C-return] 'css-complete)
 (define-key css-mode-map "{" 'css-electric-left-brace)
 (define-key css-mode-map "[" 'css-electric-left-bracket)
 (define-key css-mode-map "\"" 'css-electric-quotes)
 (define-key css-mode-map "(" 'css-electric-left-paren)
-(define-key css-mode-map ";" 'css-electric-semicolon)
 
 (provide 'css-complete)
 ;;; css-complete.el ends here
