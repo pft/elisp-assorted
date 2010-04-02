@@ -63,6 +63,16 @@
 
 (defvar css-check-follow-mode nil)
 
+(defvar css-check-csstidy-path nil
+  "Whether the csstidy executable in path.\n
+When non-nil return value is the path to local csstidy.\n
+:SEE (URL `http://csstidy.sourceforge.net/index.php')")
+;;
+(unless (bound-and-true-p css-check-csstidy-path)
+  (let ((csstidy-path
+         (or (executable-find "csstidy")(executable-find "csstidy.exe"))))
+    (when csstidy-path (setq css-check-csstidy-path csstidy-path))))
+
 (defun css-check-toggle-follow ()
   (interactive)
   (setq css-check-follow-mode
@@ -118,7 +128,9 @@
 	   (when (and oldtext newtext)
 		 (css-check-goto-line-at-p)
 		 (save-excursion
-		   (replace-string oldtext newtext nil (point-at-bol) (point-at-eol)))
+		   (replace-string oldtext newtext nil
+						   (point-at-bol)
+						   (point-at-eol)))
 		 (switch-to-buffer-other-window buffer)
 		 (save-excursion
 		   (let (buffer-read-only)
