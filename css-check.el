@@ -205,7 +205,8 @@ When non-nil return value is the path to local csstidy.\n
 		 (forward-line 5)
 		 (setq css-file file)
 		 (use-local-map css-check-map))
-	   (setq buffer-read-only t))))
+	   (setq buffer-read-only t))
+	 (switch-to-buffer-other-window "*css-check*")))
   
 (provide 'css-check)
 ;; css-check.el ends here
