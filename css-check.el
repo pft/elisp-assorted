@@ -1,4 +1,4 @@
-;;; css-complete.el --- complete css attributes and properties
+;;; css-check.el --- complete css attributes and properties
 
 ;; Copyright (C) 2010  niels giesen
 
