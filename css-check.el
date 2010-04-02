@@ -106,7 +106,7 @@ When non-nil return value is the path to local csstidy.\n
                        (string-to-number (match-string 0)))))))
          (find-file-other-window css-file)
          (and line
-              (goto-line line)))))
+			  (goto-char (point-min)) (forward-line (1- line))))))
 
 (defun css-check-apply-line-at-p ()
   "Apply tidying at point."
@@ -128,9 +128,9 @@ When non-nil return value is the path to local csstidy.\n
 	   (when (and oldtext newtext)
 		 (css-check-goto-line-at-p)
 		 (save-excursion
-		   (replace-string oldtext newtext nil
-						   (point-at-bol)
-						   (point-at-eol)))
+		   (goto-char (point-at-bol))
+		   (while (search-forward oldtext (point-at-eol) t)
+			 (replace-match newtext t t)))
 		 (switch-to-buffer-other-window buffer)
 		 (save-excursion
 		   (let (buffer-read-only)
@@ -164,7 +164,8 @@ When non-nil return value is the path to local csstidy.\n
 	   (when (and oldtext newtext)
 		 (css-check-goto-line-at-p)
 		 (save-excursion
-		   (replace-string oldtext newtext nil (point-at-bol) (point-at-eol)))
+		   (while (search-forward oldtext (point-at-eol) t)
+			 (replace-match newtext t t)))
 		 (switch-to-buffer-other-window buffer)
 		 (save-excursion
 		   (let (buffer-read-only)
