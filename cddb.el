@@ -1,6 +1,6 @@
 ;;; cddb.el --- 
 
-;; Copyright (C) 2009  niels giesen
+;; Copyright (C) 2009, 2010  niels giesen
 
 ;; Author: Niels Giesen <com dot gmail at niels dot giesen, in reversed order>
 ;; Keywords: multimedia, tools
