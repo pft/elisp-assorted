@@ -24,6 +24,8 @@ simply should be run with the function `run-lisp')
 
 poor-mans-bidi.el
 -----------------
+UPDATE: as of version 24.1 of emacs (in version control), I happily declare this mode to be obsolete, deprecated and what not. Eli Zaretskii has come far with Bidi-support (which is activated by setting `bidi-display-reordering' to a non-`nil' value, on a per-buffer bases, so please use that for testing and reporting back problems. 
+
 While we do not have bidirectional support in GNU Emacs, this program can be used to write right-to-left languages such as Arab, Persian and Yiddish.
 
 Shells out to command-line program such as fribidi of bidiv to show a mirror buffer with bidified output for a buffer in logical order.

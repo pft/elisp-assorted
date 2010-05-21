@@ -1,6 +1,6 @@
-;;; yiddish.el --- Quail package for inputting Yiddish characters  -*-coding: utf-8;-*-
+;;; yiddish.el --- Quail package for inputting Yiddish characters  -*-coding: utf-8; bidi-display-reordering:t -*-
 
-;; Copyright (C) 2008  Niels Giesen 
+;; Copyright (C) 2008, 2010  Niels Giesen 
 
 ;; Author: Niels Giesen <com dot gmail at niels dot giesen, in reversed order>
 ;; Keywords: mule, input method, Yiddish
