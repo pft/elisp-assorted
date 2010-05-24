@@ -22,10 +22,10 @@
 
 ;;; Tag music files using taggit via minibuffer or in an edit buffer.
 
-;;; M-x taggit opens edit buffer
+;;; M-x taggit opens an edit buffer
 
-;;; M-x taggit-interactive does minibuffer completion (for genres) and
-;;; tag-specific history
+;;; M-x taggit-interactive does some minibuffer completion (for
+;;; genres) and tag-specific history
 
 ;;; Prerequisites:
 
@@ -36,13 +36,20 @@
 ;;; Taggit has support for Dired mode and mingus-playlist and
 ;;; mingus-browse, but you can extend taggit support for other modes
 ;;; by providing a function that returns a list of absolute filenames
-;;; in the variable `taggit-file-functions-for-major-modes'.
+;;; in the customizable variable
+;;; `taggit-file-functions-for-major-modes'.
 
-;;; Known bugs: when comments will be supported by taggit, multiline comments
-;;; will not yet be supported by taggit.el.
+;;; You can edit a multiline tag value (such as the comment tag) by
+;;; pressing RET on such a field.
 
-;;; Code:
-(require 'cl)
+;;; Known problems: comments are not yet supported by the main line of
+;;; taggit development, but see my fork @ github.com/pft/taggit. This
+;;; also handles errors because of invalid/non-existing tags more
+;;; nicely (i.e. pretends the supported tags are simply empty, and the
+;;; others (except for "filename") are left out).
+
+;;; Code: 
+(require 'cl))
 
 (defgroup taggit ()
   "Customization group for taggit"
@@ -178,7 +185,7 @@
 (defun taggit-display-property (song)
   (destructuring-bind (key &optional val) song
 	(when (not (member key taggit-ignored-tags))
-	  (when (and val (string= key "comment"))
+	  (when (and val (member key taggit-multiline-tags))
 	  	(setq val (replace-regexp-in-string "\n" "\\\\n" val)))
 	  (insert 
 	   (format "%s%s%s%s" 
@@ -203,8 +210,7 @@
 						   'readonly t))))))
 
 (defun taggit-parse (string)
-  (nreverse
-   (mapcar #'taggit-break-up-song (taggit-break-up-songs string))))
+  (mapcar #'taggit-break-up-song (taggit-break-up-songs string)))
 
 (defun taggit-break-up-songs (string)
   (split-string string "" t))
@@ -274,16 +280,12 @@
   (let ((args (list (cdar song))))
 	(loop for prop in (cdr song) 
 		  ;; when (not (string= "unknown" (cdr prop)))
-		  do (setq args (nconc (list "-t" (concat (car prop) "=" (cdr prop))) args)))
-	args))
-
-
-(defun taggit-make-writing-args (song)
-  (let ((args (list (cdar song))))
-	(loop for prop in (cdr song) 
-		  ;; when (not (string= "unknown" (cdr prop)))
-		  do (setq args (nconc (list "-t" (concat (car prop) "=" (replace-regexp-in-string "\n" "
-" (cdr prop)))) args)))
+		  when (member (cdr prop) taggit-multiline-tags)
+		  do (setq args (nconc (list "-t"
+									 (concat (car prop) "="
+											 (replace-regexp-in-string "\\\\n" "\\n" (cdr prop))))
+							   args))
+		  else do (setq args (nconc (list "-t" (concat (car prop) "=" (cdr prop))) args)))
 	args))
 
 
@@ -458,7 +460,7 @@ expanded and/or shrunk to serve your own needs."
 		  (widen)
 		  (goto-char (point-min))
 		  (while (re-search-forward re nil t)
-			(replace-match string nil nil nil 2)))))))
+			(replace-match string nil t nil 2)))))))
 
 (defun taggit-tracknumbers (start)
   (interactive "nStart from track: ")
@@ -474,12 +476,12 @@ expanded and/or shrunk to serve your own needs."
 		  (while (re-search-forward re nil t)
 			(replace-match (number-to-string (incf start)) nil nil nil 2)))))))
 
-(defvar taggit-recursive-edit-marker (make-marker))
+(defvar taggit-multiline-edit-marker (make-marker))
 
 (defun taggit-open-indirect-buffer ()
   (interactive)
   (save-excursion
-	(set-marker taggit-recursive-edit-marker (point))
+	(set-marker taggit-multiline-edit-marker (point))
 	(beginning-of-line -1)
 	(when (re-search-forward
 		   (taggit-supported-tags-re)
@@ -489,26 +491,31 @@ expanded and/or shrunk to serve your own needs."
 					 (error "Not a multiline tag: %s" (match-string-no-properties 1))))
 			(string (match-string-no-properties 2)))
 		(switch-to-buffer-other-window "*taggit indirect edit*")
-		(erase-buffer)
+		(unless (and (zerop (length string))
+					 (> (point-max) (point-min))
+					 (y-or-n-p "Editing data exists, use this? "))
+		  (erase-buffer))
 		(setq string (replace-regexp-in-string "\\\\n" "\n" string))
 		(insert string)
+		(goto-char (point-min))
 		(message "C-c C-c to commit")
-		(use-local-map taggit-recursive-edit-map)))))
+		(use-local-map taggit-multiline-edit-map)))))
 
-(defvar taggit-recursive-edit-map 
+(defvar taggit-multiline-edit-map 
   (let ((m (make-sparse-keymap)))
-	(define-key m "\C-c\C-c" 'taggit-commit-recursive-edit)
+	(define-key m "\C-c\C-c" 'taggit-commit-multiline-edit)
 	m)
-  "Map for taggit's recursive edits")
+  "Map for taggit's multiline edits")
 
-(defun taggit-commit-recursive-edit ()
+(defun taggit-commit-multiline-edit ()
   (interactive)
   (let ((string (buffer-string)))
-	  (switch-to-buffer-other-window 
-	   (marker-buffer taggit-recursive-edit-marker))
-	  (goto-char (marker-position taggit-recursive-edit-marker))
+	(bury-buffer)
+	(switch-to-buffer-other-window 
+	 (marker-buffer taggit-multiline-edit-marker))
+	(goto-char (marker-position taggit-multiline-edit-marker))
 	(beginning-of-line -1)
-	(setq string (replace-regexp-in-string "\n" "\\\\\\\\n" string)) 
+	(setq string (replace-regexp-in-string "\n" "\\\\n" string nil t)) 
 	(when (re-search-forward
 		   (taggit-supported-tags-re)
 		   (end-of-line 2) t)
@@ -516,5 +523,3 @@ expanded and/or shrunk to serve your own needs."
 
 (provide 'taggit)
 ;;; taggit.el ends here
-
-
