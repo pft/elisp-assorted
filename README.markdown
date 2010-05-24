@@ -1,6 +1,11 @@
 Various Emacs Lisp libraries of my own hand
 ===========================================
 
+taggit.el
+---------
+Interface to [taggit](http://github.com/ft/taggit) to tag music files.
+Integration functions for mingus and dired are included.
+
 cddb.el
 -------
 Major Mode for editing cddbread entry files (e.g. for use with command-line CD-ripper abcde)
