@@ -49,7 +49,7 @@
 ;;; others (except for "filename") are left out).
 
 ;;; Code: 
-(require 'cl))
+(require 'cl)
 
 (defgroup taggit ()
   "Customization group for taggit"
@@ -222,14 +222,20 @@
   (mapcar #'taggit-break-up-property
 		  (split-string string "" t)))
 
+(defun taggit-file-function-for-major-modes ()
+  (or (cdr (assoc major-mode taggit-file-functions-for-major-modes))
+	   (error "No file-returning function defined for `%S', see `%S'"
+					  major-mode
+					  'taggit-file-functions-for-major-modes)))
+
+(defun taggit-get-files ()
+  (mapcar #'expand-file-name
+		  (funcall (taggit-file-function-for-major-modes))))
+
 (defun taggit ()
   "Open buffer where you can edit song tags."
   (interactive)
-  (let* ((fun (or (cdr (assoc major-mode taggit-file-functions-for-major-modes))
-				  (error "No file-returning function defined for `%S', see `%S'"
-						 major-mode
-						 'taggit-file-functions-for-major-modes)))
-		 (files (funcall fun)))
+  (let* ((files (taggit-get-files)))
 	(taggit-read (mapcar #'expand-file-name files))))
 
 (defun taggit-mingus-playlist-function ()
@@ -378,11 +384,7 @@
 (defun taggit-interactive ()
   "Edit music tags in minibuffer"
   (interactive)
-  (let* ((fun (or (cdr (assoc major-mode taggit-file-functions-for-major-modes))
-				  (error "No file-returning function defined for `%S', see `%S'"
-						 major-mode
-						 'taggit-file-functions-for-major-modes)))
-		 (files (funcall fun)))
+  (let* ((files (taggit-get-files)))
 	(taggit-read-for-interactive (mapcar #'expand-file-name files))))
 
 (defun taggit-read-for-interactive (files)
@@ -478,6 +480,12 @@ expanded and/or shrunk to serve your own needs."
 
 (defvar taggit-multiline-edit-marker (make-marker))
 
+(defvar taggit-multiline-edit-map 
+  (let ((m (make-sparse-keymap)))
+	(define-key m "\C-c\C-c" 'taggit-commit-multiline-edit)
+	m)
+  "Map for taggit's multiline edits")
+
 (defun taggit-open-indirect-buffer ()
   (interactive)
   (save-excursion
@@ -500,12 +508,6 @@ expanded and/or shrunk to serve your own needs."
 		(goto-char (point-min))
 		(message "C-c C-c to commit")
 		(use-local-map taggit-multiline-edit-map)))))
-
-(defvar taggit-multiline-edit-map 
-  (let ((m (make-sparse-keymap)))
-	(define-key m "\C-c\C-c" 'taggit-commit-multiline-edit)
-	m)
-  "Map for taggit's multiline edits")
 
 (defun taggit-commit-multiline-edit ()
   (interactive)
