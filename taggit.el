@@ -42,12 +42,6 @@
 ;;; You can edit a multiline tag value (such as the comment tag) by
 ;;; pressing RET on such a field.
 
-;;; Known problems: comments are not yet supported by the main line of
-;;; taggit development, but see my fork @ github.com/pft/taggit. This
-;;; also handles errors because of invalid/non-existing tags more
-;;; nicely (i.e. pretends the supported tags are simply empty, and the
-;;; others (except for "filename") are left out).
-
 ;;; Code: 
 (require 'cl)
 
@@ -57,7 +51,17 @@
 
 (defcustom taggit-program "taggit"
   "(Path to) the taggit program" 
-  :type 'string)
+  :type 'string
+  :group 'taggit)
+
+(defcustom taggit-additional-read-args ()
+  "Additional arguments to give `taggit-program' when used to read metadata.
+
+If you want to be able to read (and subsequently edit and write)
+files that have no metadata set, use '(\"-E\") as the value for
+this option with the latest version of taggit."
+  :type '(repeat string)
+  :group 'taggit)
 
 (defcustom taggit-file-functions-for-major-modes 
   '((mingus-playlist-mode		. taggit-mingus-playlist-function)
@@ -115,7 +119,8 @@
 (defun taggit-read (files)
   (with-current-buffer (get-buffer-create "*taggit*") (erase-buffer))
   (set-process-sentinel 
-   (apply #'start-process "taggit" "*taggit*" taggit-program "-m" files)
+   (apply #'start-process "taggit" "*taggit*" taggit-program "-m"
+          (append taggit-additional-read-args files))
    #'taggit-handle-output))
 
 (defun taggit-handle-output (proc stat)
