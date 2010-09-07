@@ -42,7 +42,7 @@
 ;;; You can edit a multiline tag value (such as the comment tag) by
 ;;; pressing RET on such a field.
 
-;;; Code: 
+;;; Code:
 (require 'cl)
 
 (defgroup taggit ()
@@ -50,7 +50,7 @@
   :group 'multimedia)
 
 (defcustom taggit-program "taggit"
-  "(Path to) the taggit program" 
+  "(Path to) the taggit program"
   :type 'string
   :group 'taggit)
 
@@ -63,10 +63,10 @@ this option with the latest version of taggit."
   :type '(repeat string)
   :group 'taggit)
 
-(defcustom taggit-file-functions-for-major-modes 
-  '((mingus-playlist-mode		. taggit-mingus-playlist-function)
-	(mingus-browse-mode			. taggit-mingus-browse-function)
-	(dired-mode					. dired-get-marked-files))
+(defcustom taggit-file-functions-for-major-modes
+  '((mingus-playlist-mode       . taggit-mingus-playlist-function)
+    (mingus-browse-mode             . taggit-mingus-browse-function)
+    (dired-mode                     . dired-get-marked-files))
   "Alist of (MAJOR-MODE . FUNCTION) where FUNCTION should return a list of one or more filenames."
   :group 'taggit
   :type '(alist (cons symbol function)))
@@ -92,7 +92,7 @@ this option with the latest version of taggit."
   "Face for displaying directories"
   :group 'taggit)
 
-(defvar taggit-supported-tags 
+(defvar taggit-supported-tags
   '("album" "artist" "compilation" "genre" "tracknumber" "tracktitle" "year" "comment")
   "All tags that can be written back")
 
@@ -100,119 +100,119 @@ this option with the latest version of taggit."
   '("filetype" "is_va" "bitrate" "kbitrate" "samplerate" "ksamplerate" "channels" "length" "mm:ss" "tagtypes" "tagtype")
   "All unsupported \"tags\", except for \"filename\"")
 
-(defvar taggit-multiline-tags 
+(defvar taggit-multiline-tags
   '("comment")
   "Tags where multiple lines are allowed")
 
-(defcustom taggit-ignored-tags 
+(defcustom taggit-ignored-tags
   '("is_va"
-	"bitrate"
-	"kbitrate") 
+    "bitrate"
+    "kbitrate")
   "Tags to ignore in *taggit edit* buffer"
   :group 'taggit
-  :type (cons 
-		  'set
-		  (mapcar (lambda (tag)
-					 (list 'const tag))
-				   (append taggit-supported-tags taggit-unsupported-tags))))
+  :type (cons
+          'set
+          (mapcar (lambda (tag)
+                     (list 'const tag))
+                   (append taggit-supported-tags taggit-unsupported-tags))))
 
 (defun taggit-read (files)
   (with-current-buffer (get-buffer-create "*taggit*") (erase-buffer))
-  (set-process-sentinel 
+  (set-process-sentinel
    (apply #'start-process "taggit" "*taggit*" taggit-program "-m"
           (append taggit-additional-read-args files))
    #'taggit-handle-output))
 
 (defun taggit-handle-output (proc stat)
   (when (string= "finished\n" stat)
-	(with-current-buffer "*taggit*"
-	  (let ((song-data (taggit-parse (buffer-string))))
-		(taggit-edit-song-data song-data)
-		(message  "Press C-c C-c to commit changes to one song, C-c C-a for all songs")))))
+    (with-current-buffer "*taggit*"
+      (let ((song-data (taggit-parse (buffer-string))))
+        (taggit-edit-song-data song-data)
+        (message  "Press C-c C-c to commit changes to one song, C-c C-a for all songs")))))
 
 (defun taggit-edit-song-data (song-data)
   (kill-buffer (get-buffer "*taggit edit*"))
   (with-current-buffer (get-buffer-create "*taggit edit*")
-	(erase-buffer)
-	(let ((song-number 0))
-	 (mapc #'taggit-display-song song-data))
-	(switch-to-buffer-other-window "*taggit edit*")
-	(taggit-mode)
-	;; (widget-setup)
-	(goto-char (point-min))))
+    (erase-buffer)
+    (let ((song-number 0))
+     (mapc #'taggit-display-song song-data))
+    (switch-to-buffer-other-window "*taggit edit*")
+    (taggit-mode)
+    ;; (widget-setup)
+    (goto-char (point-min))))
 
 (defun taggit-display-song (song)
-  (insert (propertize "" 'invisible t) 
-		  (propertize "\n" 'readonly t))
+  (insert (propertize "" 'invisible t)
+          (propertize "\n" 'readonly t))
   ;; (insert (format "%d/%d\n" (incf song-number) (length song-data)))
   (mapc #'taggit-display-property song))
 
 ;; (defun taggit-display-property (song)
 ;;   (destructuring-bind (key &optional val) song
-;; 	(when  (not (member key taggit-ignored-tags))
-;; 	 (if (member key taggit-supported-tags)
-;; 		 (widget-create 'editable-field
-;; 						:format 
-;; 						(format "%s%%v" 
-;; 								(propertize (format "%12s | " key)))
-;; 						(if (member key taggit-supported-tags)
-;; 							(or val "unknown")
-;; 						  (or val "")))
-;; 	   (insert 
-;; 	   (format "%s%s%s" 
-;; 			   (propertize 
-;; 				(format "%12s | " key) ;; 'intangible t
-;; 				)
-;; 			   (if (member key taggit-supported-tags)
-;; 				   (propertize (or val "unknown"))
-;; 				 (propertize (or val "") ;; 'intangible t
-;; 							 ))
-;; 			   (propertize "\n" ;; 'intangible t
-;; 						   )))))))
+;;      (when  (not (member key taggit-ignored-tags))
+;;       (if (member key taggit-supported-tags)
+;;           (widget-create 'editable-field
+;;                          :format
+;;                          (format "%s%%v"
+;;                                  (propertize (format "%12s | " key)))
+;;                          (if (member key taggit-supported-tags)
+;;                              (or val "unknown")
+;;                            (or val "")))
+;;         (insert
+;;         (format "%s%s%s"
+;;                 (propertize
+;;                  (format "%12s | " key) ;; 'intangible t
+;;                  )
+;;                 (if (member key taggit-supported-tags)
+;;                     (propertize (or val "unknown"))
+;;                   (propertize (or val "") ;; 'intangible t
+;;                               ))
+;;                 (propertize "\n" ;; 'intangible t
+;;                             )))))))
 
 ;; (defun taggit-display-property (song)
 ;;   (destructuring-bind (key &optional val) song
-;; 	(when (not (member key taggit-ignored-tags))
-;; 	  ;; (when (and val (string= key "comment"))
-;; 	  ;; 	(setq val (replace-regexp-in-string "\n" "\\\\n" val)))
-;; 	  (insert 
-;; 	   (format "%s%s%s" 
-;; 			   (propertize 
-;; 				(format "%12s | " key) ;; 'intangible t
-;; 				)
-;; 			   (if (member key taggit-supported-tags)
-;; 				   (propertize (or val "unknown"))
-;; 				 (propertize (or val "") ;; 'intangible t
-;; 							 ))
-;; 			   (propertize "\n" ;; 'intangible t
-;; 						   ))))))
+;;      (when (not (member key taggit-ignored-tags))
+;;        ;; (when (and val (string= key "comment"))
+;;        ;;    (setq val (replace-regexp-in-string "\n" "\\\\n" val)))
+;;        (insert
+;;         (format "%s%s%s"
+;;                 (propertize
+;;                  (format "%12s | " key) ;; 'intangible t
+;;                  )
+;;                 (if (member key taggit-supported-tags)
+;;                     (propertize (or val "unknown"))
+;;                   (propertize (or val "") ;; 'intangible t
+;;                               ))
+;;                 (propertize "\n" ;; 'intangible t
+;;                             ))))))
 
 (defun taggit-display-property (song)
   (destructuring-bind (key &optional val) song
-	(when (not (member key taggit-ignored-tags))
-	  (when (and val (member key taggit-multiline-tags))
-	  	(setq val (replace-regexp-in-string "\n" "\\\\n" val)))
-	  (insert 
-	   (format "%s%s%s%s" 
-			   (propertize 
-				(format "%12s |" key) 
-				'read-only t
-				'intangible t
-				'front-sticky t)
-			   (propertize 
-				" " 
-				'read-only t
-				'rear-nonsticky (if (member key taggit-supported-tags) t))			   
-			   (if (member key taggit-supported-tags)
-				   (propertize (or val "")
-							   )
-				 (propertize (or val "")
-							 'intangible t 
-							 'read-only t
-							 ))
-			   (propertize "\n" 
-						   ;; 'intangible t
-						   'readonly t))))))
+    (when (not (member key taggit-ignored-tags))
+      (when (and val (member key taggit-multiline-tags))
+        (setq val (replace-regexp-in-string "\n" "\\\\n" val)))
+      (insert
+       (format "%s%s%s%s"
+               (propertize
+                (format "%12s |" key)
+                'read-only t
+                'intangible t
+                'front-sticky t)
+               (propertize
+                " "
+                'read-only t
+                'rear-nonsticky (if (member key taggit-supported-tags) t))
+               (if (member key taggit-supported-tags)
+                   (propertize (or val "")
+                               )
+                 (propertize (or val "")
+                             'intangible t
+                             'read-only t
+                             ))
+               (propertize "\n"
+                           ;; 'intangible t
+                           'readonly t))))))
 
 (defun taggit-parse (string)
   (mapcar #'taggit-break-up-song (taggit-break-up-songs string)))
@@ -225,30 +225,30 @@ this option with the latest version of taggit."
 
 (defun taggit-break-up-song (string)
   (mapcar #'taggit-break-up-property
-		  (split-string string "" t)))
+          (split-string string "" t)))
 
 (defun taggit-file-function-for-major-modes ()
   (or (cdr (assoc major-mode taggit-file-functions-for-major-modes))
-	   (error "No file-returning function defined for `%S', see `%S'"
-					  major-mode
-					  'taggit-file-functions-for-major-modes)))
+       (error "No file-returning function defined for `%S', see `%S'"
+                      major-mode
+                      'taggit-file-functions-for-major-modes)))
 
 (defun taggit-get-files ()
   (mapcar #'expand-file-name
-		  (funcall (taggit-file-function-for-major-modes))))
+          (funcall (taggit-file-function-for-major-modes))))
 
 (defun taggit ()
   "Open buffer where you can edit song tags."
   (interactive)
   (let* ((files (taggit-get-files)))
-	(taggit-read (mapcar #'expand-file-name files))))
+    (taggit-read (mapcar #'expand-file-name files))))
 
 (defun taggit-mingus-playlist-function ()
-  (if mingus-marked-list 
-	  (mapcar (lambda (id)
-				(concat mingus-mpd-root (mingus-id->filename id)))
-			  mingus-marked-list)
-	(list (mingus-get-filename))))
+  (if mingus-marked-list
+      (mapcar (lambda (id)
+                (concat mingus-mpd-root (mingus-id->filename id)))
+              mingus-marked-list)
+    (list (mingus-get-filename))))
 
 (defun taggit-mingus-browse-function ()
   (list (mingus-get-filename)))
@@ -278,50 +278,50 @@ this option with the latest version of taggit."
   "Parse a (narrowed) buffer with data for a single song."
   (goto-char (point-min))
   (let* ((taggit-supported-tags (append '("filename") taggit-supported-tags))
-		 (re (taggit-supported-tags-re))
-		 song)
-	(while (re-search-forward re nil t)
-	  (push (cons
-			 (match-string-no-properties 1)
-			 (match-string-no-properties 2))
-			song))
-	(nreverse song)))
+         (re (taggit-supported-tags-re))
+         song)
+    (while (re-search-forward re nil t)
+      (push (cons
+             (match-string-no-properties 1)
+             (match-string-no-properties 2))
+            song))
+    (nreverse song)))
 
 (defun taggit-make-writing-args (song)
   (let ((args (list (cdar song))))
-	(loop for prop in (cdr song) 
-		  ;; when (not (string= "unknown" (cdr prop)))
-		  when (member (cdr prop) taggit-multiline-tags)
-		  do (setq args (nconc (list "-t"
-									 (concat (car prop) "="
-											 (replace-regexp-in-string "\\\\n" "\\n" (cdr prop))))
-							   args))
-		  else do (setq args (nconc (list "-t" (concat (car prop) "=" (cdr prop))) args)))
-	args))
+    (loop for prop in (cdr song)
+          ;; when (not (string= "unknown" (cdr prop)))
+          when (member (cdr prop) taggit-multiline-tags)
+          do (setq args (nconc (list "-t"
+                                     (concat (car prop) "="
+                                             (replace-regexp-in-string "\\\\n" "\\n" (cdr prop))))
+                               args))
+          else do (setq args (nconc (list "-t" (concat (car prop) "=" (cdr prop))) args)))
+    args))
 
 
 (defun taggit-write-song-back ()
  (interactive)
  (save-excursion
   (save-restriction
-	(narrow-to-page)
-	(let ((args (taggit-make-writing-args (taggit-parse-edit-song))))
-	  (taggit-write args)))))
+    (narrow-to-page)
+    (let ((args (taggit-make-writing-args (taggit-parse-edit-song))))
+      (taggit-write args)))))
 
 (defun taggit-write (args)
   (let ((proc (apply #'start-process "taggit" "*taggit write*" taggit-program args)))
-	(set-process-sentinel proc (lambda (proc s) (message "%s" s)))))
+    (set-process-sentinel proc (lambda (proc s) (message "%s" s)))))
 
 (defvar taggit-map
   (let ((map (make-sparse-keymap)))
     (define-key map "\C-c\C-c" 'taggit-write-song-back)
     (define-key map "\C-c\C-a" 'taggit-write-all)
     (define-key map "\C-a\C-a" 'taggit-apply-prop-to-all)
-	(define-key map "\C-c]" 'taggit-next-song)
-	(define-key map "\C-c[" 'taggit-prev-song)
-	(define-key map "\C-m"  'taggit-open-indirect-buffer)
-	(define-key map [(tab)] 'taggit-next-prop)
-	(define-key map [(backtab)] 'taggit-prev-prop)
+    (define-key map "\C-c]" 'taggit-next-song)
+    (define-key map "\C-c[" 'taggit-prev-song)
+    (define-key map "\C-m"  'taggit-open-indirect-buffer)
+    (define-key map [(tab)] 'taggit-next-prop)
+    (define-key map [(backtab)] 'taggit-prev-prop)
     map))
 
 (defun taggit-narrow ()
@@ -348,20 +348,20 @@ this option with the latest version of taggit."
 (defun taggit-prev-prop ()
   (interactive)
   (when
-	  (re-search-backward
-	   (taggit-supported-tags-re) nil t)
-	(re-search-forward
-	 (taggit-supported-tags-key-re) nil t)))
+      (re-search-backward
+       (taggit-supported-tags-re) nil t)
+    (re-search-forward
+     (taggit-supported-tags-key-re) nil t)))
 
 (defun taggit-write-all ()
   (interactive)
   (save-excursion
    (save-restriction
-	 (widen)
-	 (goto-char (point-min))
-	 (while (not (eobp))
-	   (taggit-write-song-back)		   
-	   (forward-page 1)))))
+     (widen)
+     (goto-char (point-min))
+     (while (not (eobp))
+       (taggit-write-song-back)
+       (forward-page 1)))))
 
 (defun taggit-mode ()
   "Major mode for editing tags...
@@ -390,19 +390,19 @@ this option with the latest version of taggit."
   "Edit music tags in minibuffer"
   (interactive)
   (let* ((files (taggit-get-files)))
-	(taggit-read-for-interactive (mapcar #'expand-file-name files))))
+    (taggit-read-for-interactive (mapcar #'expand-file-name files))))
 
 (defun taggit-read-for-interactive (files)
   (with-current-buffer (get-buffer-create "*taggit*") (erase-buffer))
-  (let ((proc (apply #'start-process "taggit" "*taggit*" taggit-program "-m" files))) 
-	(set-process-sentinel proc #'taggit-handle-for-interactive)))
+  (let ((proc (apply #'start-process "taggit" "*taggit*" taggit-program "-m" files)))
+    (set-process-sentinel proc #'taggit-handle-for-interactive)))
 
 (defun taggit-handle-for-interactive (proc stat)
   (with-local-quit
    (when (string= "finished\n" stat)
-	 (with-current-buffer "*taggit*"
-	   (let ((song-data (taggit-parse (buffer-string))))
-		 (mapc #'taggit-ask-and-write-back song-data))))))
+     (with-current-buffer "*taggit*"
+       (let ((song-data (taggit-parse (buffer-string))))
+         (mapc #'taggit-ask-and-write-back song-data))))))
 
 (progn
   (defvar taggit-album-hist nil)
@@ -414,7 +414,7 @@ this option with the latest version of taggit."
   (defvar taggit-year-hist nil)
   (defvar taggit-comment-hist nil))
 
-(defcustom taggit-genres 
+(defcustom taggit-genres
   '("blues" "classic rock" "country" "dance" "disco" "funk" "grunge" "hip-hop" "jazz" "metal" "new age" "oldies" "other" "pop" "r&b" "rap" "reggae" "rock" "techno" "industrial" "alternative" "ska" "death metal" "pranks" "soundtrack" "euro-techno" "ambient" "trip-hop" "vocal" "jazz+funk" "fusion" "trance" "classical" "instrumental" "acid" "house" "game" "sound clip" "gospel" "noise" "alt. rock" "bass" "soul" "punk" "space" "meditative" "instrum. pop" "instrum. rock" "ethnic" "gothic" "darkwave" "techno-indust." "electronic" "pop-folk" "eurodance" "dream" "southern rock" "comedy" "cult" "gangsta" "top" "christian rap" "pop/funk" "jungle" "native american" "cabaret" "new wave" "psychedelic" "rave" "showtunes" "trailer" "lo-fi" "tribal" "acid punk" "acid jazz" "polka" "retro" "musical" "rock & roll" "hard rock" "folk" "folk/rock" "national folk" "swing" "fusion" "bebob" "latin" "revival" "celtic" "bluegrass" "avantgarde" "gothic rock" "progress. rock" "psychadel. rock" "symphonic rock" "slow rock" "big band" "chorus" "easy listening" "acoustic" "humour" "speech" "chanson" "opera" "chamber music" "sonata" "symphony" "booty bass" "primus" "porn groove" "satire" "slow jam" "club" "tango" "samba" "folklore" "ballad" "power ballad" "rhythmic soul" "freestyle" "duet" "punk rock" "drum solo" "a capella" "euro-house" "dance hall" "goa" "drum & bass" "club-house" "hardcore" "terror" "indie" "britpop" "negerpunk" "polsk punk" "beat" "christian gangsta rap" "heavy metal" "black metal" "crossover" "contemporary christian" "christian rock" "merengue" "salsa" "thrash metal" "anime" "jpop" "synthpop")
 
   "Genres used in completion functions.
@@ -429,104 +429,104 @@ expanded and/or shrunk to serve your own needs."
 
 (defun taggit-ask (tag)
   (cons tag
-   (completing-read 
-	(format "%s: " tag) 
-	(when (string= tag "genre") taggit-genres)
-	nil
-	nil 
-	(cdr (assoc tag song-data))
-	(intern-soft (format "taggit-%s-hist" tag)))))
+   (completing-read
+    (format "%s: " tag)
+    (when (string= tag "genre") taggit-genres)
+    nil
+    nil
+    (cdr (assoc tag song-data))
+    (intern-soft (format "taggit-%s-hist" tag)))))
 
 (defun taggit-ask-and-write-back (song-data)
   (let ((args
-		 (mapcar 
-		  #'taggit-ask
-		  (nreverse
-		   (set-difference taggit-supported-tags taggit-ignored-tags :test #'string=)))))
-	(when (y-or-n-p "Write back? ")
-	  (push (cons "filename" (cadr (assoc "filename" song-data))) args)
-	  (taggit-write (taggit-make-writing-args args)))))
+         (mapcar
+          #'taggit-ask
+          (nreverse
+           (set-difference taggit-supported-tags taggit-ignored-tags :test #'string=)))))
+    (when (y-or-n-p "Write back? ")
+      (push (cons "filename" (cadr (assoc "filename" song-data))) args)
+      (taggit-write (taggit-make-writing-args args)))))
 
 (defun taggit-apply-prop-to-all ()
   (interactive)
-  (save-excursion 
-	(save-restriction 
-	  (save-match-data
-		(beginning-of-line)
-		(unless (re-search-forward (taggit-supported-tags-re)
-								   ;;because of intangibility
-								   ;;`beginning-of-line' above goes
-								   ;;back a line, therefore 2 here.
-								   (point-at-eol 2)
-								   t)
-		  (error "No supported tag at line"))
-		(let* ((string (match-string 2))
-			   ;;Dynamically bound `taggit-supported-tags' here
-			   (taggit-supported-tags (list (match-string 1)))
-			   (re (taggit-supported-tags-re)))
-		  (widen)
-		  (goto-char (point-min))
-		  (while (re-search-forward re nil t)
-			(replace-match string nil t nil 2)))))))
+  (save-excursion
+    (save-restriction
+      (save-match-data
+        (beginning-of-line)
+        (unless (re-search-forward (taggit-supported-tags-re)
+                                   ;;because of intangibility
+                                   ;;`beginning-of-line' above goes
+                                   ;;back a line, therefore 2 here.
+                                   (point-at-eol 2)
+                                   t)
+          (error "No supported tag at line"))
+        (let* ((string (match-string 2))
+               ;;Dynamically bound `taggit-supported-tags' here
+               (taggit-supported-tags (list (match-string 1)))
+               (re (taggit-supported-tags-re)))
+          (widen)
+          (goto-char (point-min))
+          (while (re-search-forward re nil t)
+            (replace-match string nil t nil 2)))))))
 
 (defun taggit-tracknumbers (start)
   (interactive "nStart from track: ")
   (decf start)
-  (save-excursion 
-	(save-restriction 
-	  (save-match-data
-		;;Dynamically bound `taggit-supported-tags' here
-		(let* ((taggit-supported-tags '("tracknumber"))
-			   (re (taggit-supported-tags-re)))
-		  (widen)
-		  (goto-char (point-min))
-		  (while (re-search-forward re nil t)
-			(replace-match (number-to-string (incf start)) nil nil nil 2)))))))
+  (save-excursion
+    (save-restriction
+      (save-match-data
+        ;;Dynamically bound `taggit-supported-tags' here
+        (let* ((taggit-supported-tags '("tracknumber"))
+               (re (taggit-supported-tags-re)))
+          (widen)
+          (goto-char (point-min))
+          (while (re-search-forward re nil t)
+            (replace-match (number-to-string (incf start)) nil nil nil 2)))))))
 
 (defvar taggit-multiline-edit-marker (make-marker))
 
-(defvar taggit-multiline-edit-map 
+(defvar taggit-multiline-edit-map
   (let ((m (make-sparse-keymap)))
-	(define-key m "\C-c\C-c" 'taggit-commit-multiline-edit)
-	m)
+    (define-key m "\C-c\C-c" 'taggit-commit-multiline-edit)
+    m)
   "Map for taggit's multiline edits")
 
 (defun taggit-open-indirect-buffer ()
   (interactive)
   (save-excursion
-	(set-marker taggit-multiline-edit-marker (point))
-	(beginning-of-line -1)
-	(when (re-search-forward
-		   (taggit-supported-tags-re)
-		   (end-of-line 2) t)
-	  (let ((tag (or (car (member (match-string-no-properties 1)
-							  taggit-multiline-tags))
-					 (error "Not a multiline tag: %s" (match-string-no-properties 1))))
-			(string (match-string-no-properties 2)))
-		(switch-to-buffer-other-window "*taggit indirect edit*")
-		(unless (and (zerop (length string))
-					 (> (point-max) (point-min))
-					 (y-or-n-p "Editing data exists, use this? "))
-		  (erase-buffer))
-		(setq string (replace-regexp-in-string "\\\\n" "\n" string))
-		(insert string)
-		(goto-char (point-min))
-		(message "C-c C-c to commit")
-		(use-local-map taggit-multiline-edit-map)))))
+    (set-marker taggit-multiline-edit-marker (point))
+    (beginning-of-line -1)
+    (when (re-search-forward
+           (taggit-supported-tags-re)
+           (end-of-line 2) t)
+      (let ((tag (or (car (member (match-string-no-properties 1)
+                              taggit-multiline-tags))
+                     (error "Not a multiline tag: %s" (match-string-no-properties 1))))
+            (string (match-string-no-properties 2)))
+        (switch-to-buffer-other-window "*taggit indirect edit*")
+        (unless (and (zerop (length string))
+                     (> (point-max) (point-min))
+                     (y-or-n-p "Editing data exists, use this? "))
+          (erase-buffer))
+        (setq string (replace-regexp-in-string "\\\\n" "\n" string))
+        (insert string)
+        (goto-char (point-min))
+        (message "C-c C-c to commit")
+        (use-local-map taggit-multiline-edit-map)))))
 
 (defun taggit-commit-multiline-edit ()
   (interactive)
   (let ((string (buffer-string)))
-	(bury-buffer)
-	(switch-to-buffer-other-window 
-	 (marker-buffer taggit-multiline-edit-marker))
-	(goto-char (marker-position taggit-multiline-edit-marker))
-	(beginning-of-line -1)
-	(setq string (replace-regexp-in-string "\n" "\\\\n" string nil t)) 
-	(when (re-search-forward
-		   (taggit-supported-tags-re)
-		   (end-of-line 2) t)
-	  (replace-match string nil nil nil 2))))
+    (bury-buffer)
+    (switch-to-buffer-other-window
+     (marker-buffer taggit-multiline-edit-marker))
+    (goto-char (marker-position taggit-multiline-edit-marker))
+    (beginning-of-line -1)
+    (setq string (replace-regexp-in-string "\n" "\\\\n" string nil t))
+    (when (re-search-forward
+           (taggit-supported-tags-re)
+           (end-of-line 2) t)
+      (replace-match string nil nil nil 2))))
 
 (provide 'taggit)
 ;;; taggit.el ends here
