@@ -51,3 +51,7 @@ ignored (see variable du-ignored-size). Options to "du" command
 line can be customized and/or edited in place when du is invoked
 with a prefix argument. Press `d` in a \*du\* buffer to visit a line
 in Dired.
+
+twittering-numbering
+--------------------
+Twittering-numbering adds link numbers to a twittering buffer, in the same fashion (and roughly the same code) as w3m-link-numbering-mode
