@@ -122,7 +122,7 @@
 
 (defun twittering-move-numbered-anchor (&optional arg)
   "Move the point to the specified anchor.
-When no prefix argument is specified, call `w3m-view-this-url' instead
+When no prefix argument is specified, call `twittering-enter' instead
 of moving cursor."
   (interactive "P")
   (if (and arg
@@ -131,10 +131,7 @@ of moving cursor."
         (dolist (overlay (overlays-in (point-min) (point-max)))
           (when (eq arg (overlay-get overlay 'twittering-numbering-overlay))
             (goto-char (overlay-start overlay))
-            ;; (push (w3m-anchor-sequence) w3m-goto-anchor-hist)
-            ;; (w3m-horizontal-on-screen)
-            (throw 'found nil)
-            ))
+            (throw 'found nil)))
         (error "Cannot found your specified link: %d" arg))
     (twittering-enter)))
 
