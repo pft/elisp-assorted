@@ -33,7 +33,7 @@
 ;; (autoload 'twittering-numbering "twittering-numbering" nil t)
 ;; (add-hook 'twittering-mode-hook 'twittering-numbering)
 
-;; Toggle numbering mode on and off with "n".
+;; Toggle numbering mode on and off with "N".
 
 ;; Move to a 'thing' with [0-9]+ ENTER
 
@@ -65,7 +65,7 @@
 (defun twittering-numbering-after ()
  (run-with-timer 1 nil 'twittering-numbering twittering-new-tweets-spec))
 
-(define-key twittering-mode-map "n" 'twittering-numbering-mode)
+(define-key twittering-mode-map "N" 'twittering-numbering-mode)
 
 (defun twittering-numbering-mode (&optional arg)
   "Minor mode to enable operations using link numbers"
