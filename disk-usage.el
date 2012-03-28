@@ -296,7 +296,8 @@ See man(du) for explanation of those arguments"
 
 To keep it simple, this command does not delete the file or directory from the buffer."
   (interactive)
-  (let* ((file-or-dir (du-file-at-line))
+  (let* ((pos (point))
+         (file-or-dir (du-file-at-line))
 		 (type (if (file-directory-p file-or-dir)
 				   'dir
 				 'file)))
@@ -304,7 +305,10 @@ To keep it simple, this command does not delete the file or directory from the b
 		  (format "Delete %S? " type))
 	 (case type
 	   (file (delete-file file-or-dir))
-	   (dir (delete-directory file-or-dir t))))))
+	   (dir (delete-directory file-or-dir t)))
+     (goto-char pos)
+     (let (buffer-read-only)
+       (delete-region (point-at-bol) (point-at-bol 2))))))
 
 (define-minor-mode du-mode 
   "Minor mode for du.
