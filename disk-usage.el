@@ -1,6 +1,6 @@
 ;;; disk-usage.el --- show disk usage
 
-;; Copyright (C) 2010  niels giesen
+;; Copyright (C) 2010, 2011, 2012  niels giesen
 
 ;; Author: niels giesen <sharik@matroshka>
 ;; Keywords: 
@@ -158,12 +158,17 @@ See man(du) for explanation of those arguments"
 (defun du-size-part (s)
   (string-to-number s))
 
+(du-dehumanize-string foo)
+
 (defun du-dehumanize-string (s)
   (string-match 
    du-size-regex 
    s)
+  (setq foo s)
   (* (string-to-number
-	(match-string 1 s))
+      (replace-regexp-in-string
+       "," "."
+       (match-string 1 s)))
 	 (cdr (assoc 
 		   (match-string 2 s)
 		   du-size-alist))))
@@ -204,12 +209,12 @@ See man(du) for explanation of those arguments"
    `(rx
 	 string-start
 	 (group 
-	  (1+ (or digit ".")))
+	  (1+ (or digit "." ",")))
 	 (group
 	  (or
 	   ,@du-sizes))
 	 (group (1+ space))))
-  "Regular epression matching file sizes")
+  "Regular expression matching file sizes")
 
 (defvar du-inserted-string-regex 
   (eval
