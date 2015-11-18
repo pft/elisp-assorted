@@ -1,6 +1,6 @@
 ;;; taggit.el --- interface to music tagging application taggit
 
-;; Copyright (C) 2010  niels giesen
+;; Copyright (C) 2010, 2015  niels giesen
 
 ;; Author: niels giesen <sharik@matroshka>
 ;; Keywords: multimedia
@@ -31,7 +31,7 @@
 
 ;;; The taggit program:
 
-;;; See http://github.com/ft/taggit
+;;; See http://github.com/ft/amded
 
 ;;; Taggit has support for Dired mode and mingus-playlist and
 ;;; mingus-browse, but you can extend taggit support for other modes
@@ -49,7 +49,7 @@
   "Customization group for taggit"
   :group 'multimedia)
 
-(defcustom taggit-program "taggit"
+(defcustom taggit-program "amded"
   "(Path to) the taggit program"
   :type 'string
   :group 'taggit)
