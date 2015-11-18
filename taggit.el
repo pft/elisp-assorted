@@ -93,11 +93,11 @@ this option with the latest version of taggit."
   :group 'taggit)
 
 (defvar taggit-supported-tags
-  '("album" "artist" "compilation" "genre" "tracknumber" "tracktitle" "year" "comment")
+  '("album" "artist" "compilation" "genre" "track-number" "track-title" "year" "comment")
   "All tags that can be written back")
 
 (defvar taggit-unsupported-tags
-  '("filetype" "is_va" "bitrate" "kbitrate" "samplerate" "ksamplerate" "channels" "length" "mm:ss" "tagtypes" "tagtype")
+  '("file-type" "is-va" "is_va" "bit-rate" "kbit-rate" "sample-rate" "ksample-rate" "channels" "length" "mm:ss" "tag-types" "tag-type")
   "All unsupported \"tags\", except for \"filename\"")
 
 (defvar taggit-multiline-tags
@@ -277,7 +277,7 @@ this option with the latest version of taggit."
 (defun taggit-parse-edit-song ()
   "Parse a (narrowed) buffer with data for a single song."
   (goto-char (point-min))
-  (let* ((taggit-supported-tags (append '("filename") taggit-supported-tags))
+  (let* ((taggit-supported-tags (append '("file-name") taggit-supported-tags))
          (re (taggit-supported-tags-re))
          song)
     (while (re-search-forward re nil t)
@@ -298,7 +298,6 @@ this option with the latest version of taggit."
                                args))
           else do (setq args (nconc (list "-t" (concat (car prop) "=" (cdr prop))) args)))
     args))
-
 
 (defun taggit-write-song-back ()
  (interactive)
