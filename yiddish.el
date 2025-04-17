@@ -1,4 +1,4 @@
-;;; yiddish.el --- Quail package for inputting Yiddish characters  -*-coding: utf-8; bidi-display-reordering:t -*-
+;;; yiddish.el --- Quail package for inputting Yiddish characters  -*- coding: utf-8; bidi-display-reordering: t; lexical-binding: t -*-
 
 ;; Copyright (C) 2008, 2010  Niels Giesen 
 
